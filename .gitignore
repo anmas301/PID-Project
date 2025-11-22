@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# Environment variables
+.env
+
+# Database
+*.db
+*.sqlite3
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Data (jika tidak ingin commit data mentah)
+data/raw/*.json
+data/raw/*.xml
+
+# Output
+output/*.png
+output/*.html
+output/*.csv
+
+# Models
+models/*.pkl
+models/*.joblib
+models/*.h5
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,2 @@
+target_column,trend_direction,trend_strength,current_value,mean_value,median_value,data_points
+aqi,decreasing,0.0,1,1.0,1.0,5

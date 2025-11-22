@@ -1,0 +1,36 @@
+{
+  "timestamp": "2025-11-22T14:38:46.668755",
+  "pipeline_steps": {
+    "ingestion": {
+      "api_pollution_records": 5,
+      "api_weather_records": 5,
+      "csv_datasets_loaded": 4
+    },
+    "transformation": {
+      "datasets_transformed": 5,
+      "real_time_records": 5
+    },
+    "batch_processing": {
+      "daily_records": 5,
+      "weekly_records": 5,
+      "monthly_records": 5,
+      "anomalies_detected": "0"
+    },
+    "ispa_analysis": {
+      "high_risk_locations": 5,
+      "correlations_calculated": 7,
+      "recommendations": 0
+    },
+    "predictions": {
+      "total_predictions": 35,
+      "locations": 5,
+      "days_ahead": 7,
+      "high_risk_predictions": 0,
+      "moderate_risk_predictions": 0
+    }
+  },
+  "summary": {
+    "status": "SUCCESS",
+    "total_steps_completed": 5
+  }
+}
