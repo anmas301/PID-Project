@@ -32,27 +32,43 @@ st.markdown("---")
 with st.sidebar:
     st.header("📊 Data Source")
     
-    # File uploader untuk hasil ETL
-    uploaded_file = st.file_uploader(
-        "Upload hasil ETL (CSV)", 
-        type=['csv'],
-        help="Upload file CSV hasil dari ETL pipeline"
-    )
-    
-    # Atau load dari folder output
-    st.markdown("### Atau pilih dari hasil sebelumnya:")
+    # Auto-load logic: prioritaskan file terbaru dari output folder
+    auto_loaded_file = None
     if os.path.exists('output'):
         csv_files = [f for f in os.listdir('output') if f.endswith('.csv')]
         if csv_files:
-            # Auto-select file terbaru jika belum ada yang dipilih
+            # Urutkan berdasarkan timestamp di nama file atau modification time
             sorted_files = sorted(csv_files, reverse=True)
-            default_file = sorted_files[0] if not uploaded_file else ''
-            selected_file = st.selectbox("File hasil ETL:", [''] + sorted_files, index=1 if default_file and not uploaded_file else 0)
-            if selected_file:
+            auto_loaded_file = f'output/{sorted_files[0]}'
+    
+    # Pilih file dari folder output
+    uploaded_file = None
+    if os.path.exists('output'):
+        csv_files = [f for f in os.listdir('output') if f.endswith('.csv')]
+        if csv_files:
+            sorted_files = sorted(csv_files, reverse=True)
+            selected_file = st.selectbox(
+                "Pilih file hasil ETL:", 
+                ['Auto (Terbaru)'] + sorted_files,
+                help="Pilih 'Auto (Terbaru)' untuk load file terbaru otomatis"
+            )
+            
+            if selected_file != 'Auto (Terbaru)':
                 uploaded_file = f'output/{selected_file}'
-            elif not uploaded_file and default_file:
-                # Auto-load file terbaru jika tidak ada pilihan
-                uploaded_file = f'output/{default_file}'
+            else:
+                uploaded_file = auto_loaded_file
+        else:
+            st.warning("Folder output/ kosong. Jalankan ETL pipeline terlebih dahulu.")
+    else:
+        st.warning("Folder output/ tidak ditemukan.")
+    
+    # Jika tidak ada file yang dipilih, gunakan auto-loaded
+    if not uploaded_file and auto_loaded_file:
+        uploaded_file = auto_loaded_file
+    
+    # Tampilkan info file yang diload
+    if uploaded_file:
+        st.success(f"✅ Loaded: {os.path.basename(uploaded_file)}")
     
     st.markdown("---")
     st.markdown("### 📖 Metodologi")
@@ -68,18 +84,38 @@ with st.sidebar:
     - Davis et al. (2016)
     """)
 
-# Load data
-df = None
-if uploaded_file:
+# Load data with caching
+@st.cache_data
+def load_data(file_path):
+    """Load dan cache data dari file CSV"""
     try:
-        if isinstance(uploaded_file, str):
-            df = pd.read_csv(uploaded_file)
+        if isinstance(file_path, str):
+            df = pd.read_csv(file_path)
         else:
-            df = pd.read_csv(uploaded_file)
+            df = pd.read_csv(file_path)
         
-        st.success(f"✅ Data berhasil dimuat: {len(df)} records")
+        # Validasi kolom yang diperlukan
+        required_cols = ['city', 'province', 'rr_total', 'risk_category']
+        missing_cols = [col for col in required_cols if col not in df.columns]
+        if missing_cols:
+            raise ValueError(f"Kolom yang diperlukan tidak ditemukan: {missing_cols}")
+        
+        return df, None
     except Exception as e:
-        st.error(f"❌ Error loading data: {str(e)}")
+        return None, str(e)
+
+df = None
+error_msg = None
+
+if uploaded_file:
+    # Buat key unik untuk cache berdasarkan file path atau upload time
+    cache_key = uploaded_file if isinstance(uploaded_file, str) else f"{uploaded_file.name}_{uploaded_file.size}"
+    df, error_msg = load_data(cache_key if isinstance(uploaded_file, str) else uploaded_file)
+    
+    if df is not None:
+        st.success(f"✅ Data berhasil dimuat: {len(df)} kota | {len(df.columns)} kolom")
+    else:
+        st.error(f"❌ Error loading data: {error_msg}")
 
 if df is not None and len(df) > 0:
     
@@ -108,20 +144,19 @@ if df is not None and len(df) > 0:
             st.metric("Kota Risiko Tinggi", high_risk)
         
         # Peta scatter
+        # Pastikan kolom yang digunakan ada di dataframe
+        map_hover_data = {'province': True, 'rr_total': ':.4f', 'risk_category': True, 'lat': False, 'lon': False}
+        if 'pm2_5' in df.columns:
+            map_hover_data['pm2_5'] = ':.1f'
+        if 'temperature' in df.columns:
+            map_hover_data['temperature'] = ':.1f'
+        
         fig_map = px.scatter_geo(
             df,
             lat='lat',
             lon='lon',
             hover_name='city',
-            hover_data={
-                'province': True,
-                'rr_total': ':.4f',
-                'risk_category': True,
-                'pm2_5': ':.1f',
-                'temperature': ':.1f',
-                'lat': False,
-                'lon': False
-            },
+            hover_data=map_hover_data,
             color='risk_category',
             size='rr_total',
             color_discrete_map={
@@ -165,6 +200,12 @@ if df is not None and len(df) > 0:
             df_sorted = df.sort_values('city')
         
         # Bar chart RR Total
+        bar_hover_data = {'province': True}
+        if 'pm2_5' in df_sorted.columns:
+            bar_hover_data['pm2_5'] = ':.1f'
+        if 'temperature' in df_sorted.columns:
+            bar_hover_data['temperature'] = ':.1f'
+        
         fig_bar = px.bar(
             df_sorted,
             x='city',
@@ -178,11 +219,7 @@ if df is not None and len(df) > 0:
             },
             title='Risk Ratio Total per Kota',
             labels={'rr_total': 'RR Total', 'city': 'Kota'},
-            hover_data={
-                'province': True,
-                'pm2_5': ':.1f',
-                'temperature': ':.1f'
-            }
+            hover_data=bar_hover_data
         )
         
         st.plotly_chart(fig_bar, use_container_width=True)
@@ -190,20 +227,26 @@ if df is not None and len(df) > 0:
         # Detail table
         st.subheader("📋 Detail Data Kota")
         
-        display_cols = [
-            'city', 'province', 'rr_total', 'risk_category',
-            'pm2_5', 'pm10', 'no2', 'temperature', 'humidity'
-        ]
+        # Pilih kolom yang ada
+        base_cols = ['city', 'province', 'rr_total', 'risk_category']
+        optional_cols = ['pm2_5', 'pm10', 'no2', 'temperature', 'humidity']
+        display_cols = base_cols + [col for col in optional_cols if col in df_sorted.columns]
+        
+        # Format dictionary hanya untuk kolom yang ada
+        format_dict = {'rr_total': '{:.4f}'}
+        if 'pm2_5' in df_sorted.columns:
+            format_dict['pm2_5'] = '{:.1f}'
+        if 'pm10' in df_sorted.columns:
+            format_dict['pm10'] = '{:.1f}'
+        if 'no2' in df_sorted.columns:
+            format_dict['no2'] = '{:.1f}'
+        if 'temperature' in df_sorted.columns:
+            format_dict['temperature'] = '{:.1f}°C'
+        if 'humidity' in df_sorted.columns:
+            format_dict['humidity'] = '{:.0f}%'
         
         st.dataframe(
-            df_sorted[display_cols].style.format({
-                'rr_total': '{:.4f}',
-                'pm2_5': '{:.1f}',
-                'pm10': '{:.1f}',
-                'no2': '{:.1f}',
-                'temperature': '{:.1f}°C',
-                'humidity': '{:.0f}%'
-            }).background_gradient(subset=['rr_total'], cmap='RdYlGn_r'),
+            df_sorted[display_cols].style.format(format_dict).background_gradient(subset=['rr_total'], cmap='RdYlGn_r'),
             use_container_width=True,
             height=400
         )
