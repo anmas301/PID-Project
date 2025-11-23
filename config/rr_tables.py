@@ -53,34 +53,53 @@ WEATHER_RR = {
     ]
 }
 
-# Kota-kota besar di Indonesia
+# Kota-kota besar di Indonesia (1 kota per provinsi)
 INDONESIAN_CITIES = [
-    # Jawa
+    # Sumatera (10 provinsi)
+    {'name': 'Banda Aceh', 'lat': 5.5483, 'lon': 95.3238, 'province': 'Aceh'},
+    {'name': 'Medan', 'lat': 3.5952, 'lon': 98.6722, 'province': 'Sumatera Utara'},
+    {'name': 'Padang', 'lat': -0.9471, 'lon': 100.4172, 'province': 'Sumatera Barat'},
+    {'name': 'Pekanbaru', 'lat': 0.5071, 'lon': 101.4478, 'province': 'Riau'},
+    {'name': 'Jambi', 'lat': -1.6101, 'lon': 103.6131, 'province': 'Jambi'},
+    {'name': 'Palembang', 'lat': -2.9761, 'lon': 104.7754, 'province': 'Sumatera Selatan'},
+    {'name': 'Bengkulu', 'lat': -3.8004, 'lon': 102.2655, 'province': 'Bengkulu'},
+    {'name': 'Bandar Lampung', 'lat': -5.4292, 'lon': 105.2625, 'province': 'Lampung'},
+    {'name': 'Pangkal Pinang', 'lat': -2.1316, 'lon': 106.1168, 'province': 'Kepulauan Bangka Belitung'},
+    {'name': 'Batam', 'lat': 1.0456, 'lon': 104.0305, 'province': 'Kepulauan Riau'},
+    
+    # Jawa (6 provinsi)
     {'name': 'Jakarta', 'lat': -6.2088, 'lon': 106.8456, 'province': 'DKI Jakarta'},
-    {'name': 'Surabaya', 'lat': -7.2575, 'lon': 112.7521, 'province': 'Jawa Timur'},
     {'name': 'Bandung', 'lat': -6.9175, 'lon': 107.6191, 'province': 'Jawa Barat'},
     {'name': 'Semarang', 'lat': -6.9667, 'lon': 110.4167, 'province': 'Jawa Tengah'},
     {'name': 'Yogyakarta', 'lat': -7.7956, 'lon': 110.3695, 'province': 'DI Yogyakarta'},
-    {'name': 'Malang', 'lat': -7.9797, 'lon': 112.6304, 'province': 'Jawa Timur'},
+    {'name': 'Surabaya', 'lat': -7.2575, 'lon': 112.7521, 'province': 'Jawa Timur'},
+    {'name': 'Serang', 'lat': -6.1204, 'lon': 106.1503, 'province': 'Banten'},
     
-    # Sumatera
-    {'name': 'Medan', 'lat': 3.5952, 'lon': 98.6722, 'province': 'Sumatera Utara'},
-    {'name': 'Palembang', 'lat': -2.9761, 'lon': 104.7754, 'province': 'Sumatera Selatan'},
-    {'name': 'Pekanbaru', 'lat': 0.5071, 'lon': 101.4478, 'province': 'Riau'},
-    {'name': 'Padang', 'lat': -0.9471, 'lon': 100.4172, 'province': 'Sumatera Barat'},
-    
-    # Kalimantan
-    {'name': 'Balikpapan', 'lat': -1.2379, 'lon': 116.8529, 'province': 'Kalimantan Timur'},
-    {'name': 'Banjarmasin', 'lat': -3.3194, 'lon': 114.5900, 'province': 'Kalimantan Selatan'},
+    # Kalimantan (5 provinsi)
     {'name': 'Pontianak', 'lat': -0.0263, 'lon': 109.3425, 'province': 'Kalimantan Barat'},
+    {'name': 'Palangkaraya', 'lat': -2.2089, 'lon': 113.9213, 'province': 'Kalimantan Tengah'},
+    {'name': 'Banjarmasin', 'lat': -3.3194, 'lon': 114.5900, 'province': 'Kalimantan Selatan'},
+    {'name': 'Balikpapan', 'lat': -1.2379, 'lon': 116.8529, 'province': 'Kalimantan Timur'},
+    {'name': 'Tarakan', 'lat': 3.3000, 'lon': 117.6333, 'province': 'Kalimantan Utara'},
     
-    # Sulawesi
-    {'name': 'Makassar', 'lat': -5.1477, 'lon': 119.4327, 'province': 'Sulawesi Selatan'},
+    # Sulawesi (6 provinsi)
     {'name': 'Manado', 'lat': 1.4748, 'lon': 124.8421, 'province': 'Sulawesi Utara'},
+    {'name': 'Palu', 'lat': -0.8999, 'lon': 119.8707, 'province': 'Sulawesi Tengah'},
+    {'name': 'Makassar', 'lat': -5.1477, 'lon': 119.4327, 'province': 'Sulawesi Selatan'},
+    {'name': 'Kendari', 'lat': -3.9450, 'lon': 122.5989, 'province': 'Sulawesi Tenggara'},
+    {'name': 'Gorontalo', 'lat': 0.5435, 'lon': 123.0644, 'province': 'Gorontalo'},
+    {'name': 'Mamuju', 'lat': -2.6739, 'lon': 118.8899, 'province': 'Sulawesi Barat'},
     
-    # Bali & Nusa Tenggara
+    # Bali & Nusa Tenggara (3 provinsi)
     {'name': 'Denpasar', 'lat': -8.6705, 'lon': 115.2126, 'province': 'Bali'},
     {'name': 'Mataram', 'lat': -8.5830, 'lon': 116.1162, 'province': 'Nusa Tenggara Barat'},
+    {'name': 'Kupang', 'lat': -10.1718, 'lon': 123.6075, 'province': 'Nusa Tenggara Timur'},
+    
+    # Maluku & Papua (4 provinsi)
+    {'name': 'Ambon', 'lat': -3.6954, 'lon': 128.1814, 'province': 'Maluku'},
+    {'name': 'Ternate', 'lat': 0.7883, 'lon': 127.3640, 'province': 'Maluku Utara'},
+    {'name': 'Jayapura', 'lat': -2.5915, 'lon': 140.6672, 'province': 'Papua'},
+    {'name': 'Manokwari', 'lat': -0.8614, 'lon': 134.0640, 'province': 'Papua Barat'},
 ]
 
 # Kategori Risiko berdasarkan RR Total

@@ -44,9 +44,15 @@ with st.sidebar:
     if os.path.exists('output'):
         csv_files = [f for f in os.listdir('output') if f.endswith('.csv')]
         if csv_files:
-            selected_file = st.selectbox("File hasil ETL:", [''] + sorted(csv_files, reverse=True))
+            # Auto-select file terbaru jika belum ada yang dipilih
+            sorted_files = sorted(csv_files, reverse=True)
+            default_file = sorted_files[0] if not uploaded_file else ''
+            selected_file = st.selectbox("File hasil ETL:", [''] + sorted_files, index=1 if default_file and not uploaded_file else 0)
             if selected_file:
                 uploaded_file = f'output/{selected_file}'
+            elif not uploaded_file and default_file:
+                # Auto-load file terbaru jika tidak ada pilihan
+                uploaded_file = f'output/{default_file}'
     
     st.markdown("---")
     st.markdown("### 📖 Metodologi")
