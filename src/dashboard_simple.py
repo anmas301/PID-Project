@@ -28,6 +28,53 @@ st.title("🏥 Dashboard Analisis Risk Ratio ISPA")
 st.markdown("**Metodologi Multiplikatif** untuk Risiko Infeksi Saluran Pernapasan Akut")
 st.markdown("---")
 
+# Function untuk menjalankan ETL
+@st.cache_data(ttl=3600)  # Cache selama 1 jam
+def run_etl_pipeline():
+    """Jalankan ETL pipeline dan return path ke file hasil"""
+    try:
+        from src.etl_pipeline import SimpleETL
+        
+        etl = SimpleETL()
+        etl.extract()
+        etl.transform()
+        output_file = etl.load()
+        
+        return output_file, None
+    except Exception as e:
+        return None, str(e)
+
+# Function untuk cek apakah scheduler sedang berjalan
+def check_scheduler_running():
+    """Cek apakah scheduler otomatis sedang berjalan"""
+    import subprocess
+    try:
+        result = subprocess.run(['pgrep', '-f', 'scheduler.py'], 
+                              capture_output=True, text=True)
+        return result.returncode == 0
+    except:
+        return False
+
+# Function untuk start scheduler
+def start_scheduler_background():
+    """Start scheduler di background"""
+    import subprocess
+    try:
+        script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        scheduler_path = os.path.join(script_dir, 'src', 'scheduler.py')
+        log_path = os.path.join(script_dir, 'scheduler.log')
+        
+        # Jalankan scheduler di background
+        subprocess.Popen(
+            ['nohup', 'python', scheduler_path],
+            stdout=open(log_path, 'a'),
+            stderr=subprocess.STDOUT,
+            start_new_session=True
+        )
+        return True, None
+    except Exception as e:
+        return False, str(e)
+
 # Sidebar
 with st.sidebar:
     st.header("📊 Data Source")
@@ -35,6 +82,49 @@ with st.sidebar:
     # Dapatkan path absolut ke folder output
     script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     output_dir = os.path.join(script_dir, 'output')
+    
+    # Cek status scheduler
+    scheduler_running = check_scheduler_running()
+    
+    # Status scheduler
+    st.markdown("### ⏰ Auto Scheduler")
+    if scheduler_running:
+        st.success("✅ Scheduler aktif (Update tiap 1 jam)")
+    else:
+        st.warning("⚠️ Scheduler tidak aktif")
+    
+    # Tombol untuk start/stop scheduler
+    col1, col2 = st.columns(2)
+    with col1:
+        if not scheduler_running:
+            if st.button("▶️ Start Scheduler", use_container_width=True):
+                success, error = start_scheduler_background()
+                if success:
+                    st.success("✅ Scheduler dimulai!")
+                    st.rerun()
+                else:
+                    st.error(f"❌ Error: {error}")
+    
+    with col2:
+        if scheduler_running:
+            if st.button("⏸️ Stop Scheduler", use_container_width=True):
+                import subprocess
+                subprocess.run(['pkill', '-f', 'scheduler.py'])
+                st.success("✅ Scheduler dihentikan!")
+                st.rerun()
+    
+    st.markdown("---")
+    
+    # Tombol untuk refresh data manual
+    if st.button("🔄 Refresh Data Manual", use_container_width=True):
+        st.cache_data.clear()  # Clear cache
+        with st.spinner("⏳ Menjalankan ETL Pipeline... Mohon tunggu ~30 detik"):
+            output_file, error = run_etl_pipeline()
+            if output_file:
+                st.success(f"✅ ETL selesai! File: {os.path.basename(output_file)}")
+                st.rerun()  # Reload dashboard
+            else:
+                st.error(f"❌ Error ETL: {error}")
     
     # Auto-load logic: prioritaskan file terbaru dari output folder
     auto_loaded_file = None
@@ -45,8 +135,19 @@ with st.sidebar:
             sorted_files = sorted(csv_files, reverse=True)
             auto_loaded_file = os.path.join(output_dir, sorted_files[0])
     
-    # Pilih file dari folder output
+    # Jika tidak ada data sama sekali, jalankan ETL otomatis
     uploaded_file = None
+    if not auto_loaded_file:
+        st.info("📥 Tidak ada data. Menjalankan ETL otomatis...")
+        with st.spinner("⏳ Fetching data dari API... (~30 detik)"):
+            output_file, error = run_etl_pipeline()
+            if output_file:
+                auto_loaded_file = output_file
+                st.success("✅ Data berhasil diambil!")
+            else:
+                st.error(f"❌ Gagal mengambil data: {error}")
+    
+    # Pilih file dari folder output
     if os.path.exists(output_dir):
         csv_files = [f for f in os.listdir(output_dir) if f.endswith('.csv')]
         if csv_files:
@@ -61,10 +162,6 @@ with st.sidebar:
                 uploaded_file = os.path.join(output_dir, selected_file)
             else:
                 uploaded_file = auto_loaded_file
-        else:
-            st.warning("Folder output/ kosong. Jalankan ETL pipeline terlebih dahulu.")
-    else:
-        st.warning(f"Folder output/ tidak ditemukan di: {output_dir}")
     
     # Jika tidak ada file yang dipilih, gunakan auto-loaded
     if not uploaded_file and auto_loaded_file:
@@ -73,9 +170,14 @@ with st.sidebar:
     # Tampilkan info file yang diload
     if uploaded_file:
         st.success(f"✅ Loaded: {os.path.basename(uploaded_file)}")
+        # Tampilkan timestamp file
+        if os.path.exists(uploaded_file):
+            mtime = os.path.getmtime(uploaded_file)
+            file_time = datetime.fromtimestamp(mtime)
+            st.caption(f"📅 Diperbarui: {file_time.strftime('%Y-%m-%d %H:%M:%S')}")
     
     st.markdown("---")
-    st.markdown("### 📖 Metodologi")
+    st.markdown("###  Metodologi")
     st.markdown("""
     **Model Multiplikatif:**
     
