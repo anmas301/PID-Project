@@ -32,19 +32,23 @@ st.markdown("---")
 with st.sidebar:
     st.header("📊 Data Source")
     
+    # Dapatkan path absolut ke folder output
+    script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    output_dir = os.path.join(script_dir, 'output')
+    
     # Auto-load logic: prioritaskan file terbaru dari output folder
     auto_loaded_file = None
-    if os.path.exists('output'):
-        csv_files = [f for f in os.listdir('output') if f.endswith('.csv')]
+    if os.path.exists(output_dir):
+        csv_files = [f for f in os.listdir(output_dir) if f.endswith('.csv')]
         if csv_files:
             # Urutkan berdasarkan timestamp di nama file atau modification time
             sorted_files = sorted(csv_files, reverse=True)
-            auto_loaded_file = f'output/{sorted_files[0]}'
+            auto_loaded_file = os.path.join(output_dir, sorted_files[0])
     
     # Pilih file dari folder output
     uploaded_file = None
-    if os.path.exists('output'):
-        csv_files = [f for f in os.listdir('output') if f.endswith('.csv')]
+    if os.path.exists(output_dir):
+        csv_files = [f for f in os.listdir(output_dir) if f.endswith('.csv')]
         if csv_files:
             sorted_files = sorted(csv_files, reverse=True)
             selected_file = st.selectbox(
@@ -54,13 +58,13 @@ with st.sidebar:
             )
             
             if selected_file != 'Auto (Terbaru)':
-                uploaded_file = f'output/{selected_file}'
+                uploaded_file = os.path.join(output_dir, selected_file)
             else:
                 uploaded_file = auto_loaded_file
         else:
             st.warning("Folder output/ kosong. Jalankan ETL pipeline terlebih dahulu.")
     else:
-        st.warning("Folder output/ tidak ditemukan.")
+        st.warning(f"Folder output/ tidak ditemukan di: {output_dir}")
     
     # Jika tidak ada file yang dipilih, gunakan auto-loaded
     if not uploaded_file and auto_loaded_file:
