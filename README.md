@@ -1,252 +1,193 @@
-# 🌫️ ISPA Risk Monitoring System - Pipeline Data & Infrastruktur
+# 🌫️ ISPA Risk Analysis - ETL Pipeline dengan Metodologi Risk Ratio
 
 > **Case 1 — Kualitas Udara dan Risiko Kesehatan (SDG 3: Good Health and Well-being)**
 
-Project ini merupakan implementasi pipeline data untuk monitoring kualitas udara dan prediksi risiko kesehatan ISPA (Infeksi Saluran Pernapasan Akut) di Jawa Tengah. Pipeline ini mengintegrasikan data real-time dari API dengan dataset historis untuk menghasilkan insight dan prediksi risiko kesehatan.
+Project ini merupakan implementasi **ETL (Extract-Transform-Load) Pipeline** untuk analisis risiko ISPA (Infeksi Saluran Pernapasan Akut) di Indonesia menggunakan **metodologi Risk Ratio multiplikatif**. Pipeline mengambil data real-time dari API, menghitung risk ratio berdasarkan penelitian ilmiah, dan menghasilkan visualisasi interaktif.
 
 ## 📋 Problem Statement
 
-Kota-kota besar di Indonesia mengalami peningkatan polusi udara yang berdampak langsung pada kasus ISPA. Diperlukan pipeline data untuk memantau kualitas udara dan mengidentifikasi area berisiko tinggi.
+Kota-kota di Indonesia mengalami variasi polusi udara dan kondisi cuaca yang berdampak pada risiko ISPA. Diperlukan sistem ETL sederhana untuk mengambil data real-time, menganalisis risiko menggunakan metodologi ilmiah, dan menyajikan hasil dalam dashboard interaktif.
 
 ## 🎯 Tujuan
 
-Mengintegrasikan data dari API real-time dan batch untuk menghasilkan insight risiko kesehatan berdasarkan polusi udara, dengan output berupa:
-- Dashboard prediksi risiko ISPA berdasarkan kualitas udara
-- Model machine learning untuk prediksi risiko
-- Visualisasi data kualitas udara dan cuaca
-- Sistem monitoring real-time
+Membangun pipeline ETL sederhana untuk analisis risiko ISPA dengan:
+- **Extract**: Mengambil data real-time dari API (OpenWeatherMap & WeatherAPI)
+- **Transform**: Menghitung Risk Ratio menggunakan metodologi multiplikatif
+- **Load**: Menyimpan hasil analisis dalam format CSV dan JSON
+- **Visualisasi**: Dashboard interaktif dengan 5 tab analisis komprehensif
 
-## 📊 Dataset & Data Sources
+## 📊 Data Sources
 
 ### Real-time API Data
 1. **OpenWeatherMap Air Pollution API**
-   - Parameter: AQI, PM2.5, PM10, CO, NO2, O3, SO2
-   - Update: Real-time (hourly)
-   - API Key: `a2a73644ed35384c9ac73bc606560ed5`
+   - Parameter: PM2.5, PM10, NO2, SO2, O3
+   - Update: Real-time
+   - Endpoint: Air Pollution API
 
 2. **WeatherAPI**
-   - Parameter: Suhu, kelembaban, angin, tekanan udara
-   - Update: Real-time (current)
-   - API Key: `e67f32eab28541b892b40743251609`
+   - Parameter: Suhu, kelembaban, kecepatan angin
+   - Update: Real-time (current weather)
+   - Data untuk analisis kondisi cuaca
 
-### Historical CSV Datasets
-1. `dlh-indeks-kualitas-udara-2018-2022.csv` - Data kualitas udara historis
-2. `Rata-rata Suhu dan Kelembaban Udara Menurut Bulan di Provinsi Jawa Tengah, 2019 - 2021.csv`
-3. `Rata-Rata Tekanan Udara, Kecepatan Angin dan Lama Penyinaran Matahari Menurut Bulan di Provinsi Jawa Tengah, 2019 - 2021.csv`
-4. `tren-kasus-ispa-per-bulan-tahun-2020-2022.csv` - Data kasus ISPA
+## 🗺️ Coverage Area
 
-### Lokasi Monitoring
-- Semarang (pusat)
-- Solo
-- Tegal
-- Pekalongan
-- Purwokerto
+**34 Kota** mewakili **semua provinsi di Indonesia** (1 kota per provinsi):
 
-## 🔄 Pipeline Architecture
+- **Sumatera** (10): Banda Aceh, Medan, Padang, Pekanbaru, Jambi, Palembang, Bengkulu, Bandar Lampung, Pangkal Pinang, Batam
+- **Jawa** (6): Jakarta, Bandung, Semarang, Yogyakarta, Surabaya, Serang
+- **Kalimantan** (5): Pontianak, Palangkaraya, Banjarmasin, Balikpapan, Tarakan
+- **Sulawesi** (6): Manado, Palu, Makassar, Kendari, Gorontalo, Mamuju
+- **Bali & Nusa Tenggara** (3): Denpasar, Mataram, Kupang
+- **Maluku & Papua** (4): Ambon, Ternate, Jayapura, Manokwari
+
+## 🔄 Pipeline Architecture (ETL)
 
 ```
-┌─────────────────┐
-│   INGESTION     │ ← Fetch dari API + Load CSV
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│ TRANSFORMATION  │ ← Cleaning, Join, Feature Engineering
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│    STORAGE      │ ← PostgreSQL / MongoDB (optional)
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│ BATCH PROCESS   │ ← Agregasi harian/weekly/monthly
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  ML MODELING    │ ← Train & Predict risiko ISPA
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  VISUALIZATION  │ ← Dashboard Streamlit
-└─────────────────┘
+┌─────────────────────────────────────────────────────┐
+│                   EXTRACT                            │
+│  • Fetch air pollution data (OpenWeatherMap API)    │
+│  • Fetch weather data (WeatherAPI)                  │
+│  • 34 kota × 8 parameters = Real-time data          │
+└──────────────────┬──────────────────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────────────────┐
+│                  TRANSFORM                           │
+│  • Lookup Risk Ratio dari tabel metodologi          │
+│  • Hitung RR Total (Model Multiplikatif):           │
+│    RR = RR_PM2.5 × RR_PM10 × RR_NO2 × RR_SO2 ×     │
+│         RR_O3 × RR_temp × RR_humidity × RR_wind    │
+│  • Assign kategori risiko (Rendah-Sangat Tinggi)    │
+└──────────────────┬──────────────────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────────────────┐
+│                    LOAD                              │
+│  • Save to CSV: output/risk_analysis_*.csv          │
+│  • Save to JSON: output/risk_analysis_*.json        │
+│  • Summary statistics & console report              │
+└──────────────────┬──────────────────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────────────────┐
+│               VISUALIZATION                          │
+│  • Dashboard Streamlit (5 tabs)                     │
+│  • Peta geografis, ranking, breakdown, statistik    │
+│  • Auto-load data terbaru                           │
+└─────────────────────────────────────────────────────┘
 ```
+
+## 📐 Metodologi Risk Ratio
+
+Pipeline menggunakan **Model Multiplikatif** berdasarkan penelitian ilmiah:
+
+### Formula
+```
+RR_total = RR_PM2.5 × RR_PM10 × RR_NO2 × RR_SO2 × RR_O3 × 
+           RR_suhu × RR_kelembapan × RR_angin
+```
+
+### Sumber Penelitian
+- **Odo et al. (2022)**: PM2.5 → ISPA (+4.5%)
+- **Monoson et al.**: PM10 → ISPA (+2%)
+- **Davis et al. (2016)**: Suhu & kelembapan → transmisi virus
+- **Lowen et al. (2007)**: Kondisi udara dingin & kering → aerosol stability
+
+Lihat detail lengkap di [`TabelMetodologi.md`](TabelMetodologi.md)
 
 ## 🛠️ Tech Stack
 
-- **Python 3.8+**
+- **Python 3.12+**
 - **Data Processing**: pandas, numpy
-- **APIs**: requests
-- **Database**: PostgreSQL, MongoDB (optional)
-- **ML**: scikit-learn, xgboost
-- **Visualization**: Streamlit, Plotly, Matplotlib, Seaborn
-- **Utilities**: python-dotenv, schedule, loguru
+- **APIs**: requests (OpenWeatherMap, WeatherAPI)
+- **Visualization**: Streamlit, Plotly
+- **No Database Required**: Direct CSV/JSON output
+- **No Machine Learning**: Risk Ratio methodology dari penelitian
 
-## 📁 Project Structure
+## 📁 Project Structure (Simplified)
 
 ```
 PID-Project/
 ├── config/
-│   └── config.py              # Configuration & API keys
+│   ├── config.py              # API keys & configuration
+│   └── rr_tables.py           # Risk Ratio methodology tables
+│
 ├── src/
-│   ├── ingestion.py           # Data ingestion dari API & CSV
-│   ├── transformation.py      # Data cleaning & transformation
-│   ├── storage.py             # Database operations
-│   ├── batch_processing.py    # Batch processing & agregasi
-│   ├── model.py               # ML model training & prediction
-│   ├── dashboard.py           # Streamlit dashboard
-│   └── main.py                # Main pipeline orchestration
-├── data/
-│   ├── raw/                   # Raw data dari API
-│   └── processed/             # Processed data
-├── models/                    # Trained ML models
-├── output/                    # Output reports & visualizations
-├── notebooks/                 # Jupyter notebooks untuk EDA
+│   ├── etl_pipeline.py        # ETL Pipeline (Extract-Transform-Load)
+│   └── dashboard_simple.py    # Streamlit Dashboard (5 tabs)
+│
+├── output/
+│   ├── risk_analysis_*.csv    # Hasil analisis (34 kota)
+│   └── risk_analysis_*.json   # Format API-ready
+│
+├── README.md                  # Documentation (this file)
+├── README_ETL.md              # ETL Pipeline detailed guide
+├── TabelMetodologi.md         # Risk Ratio methodology reference
 ├── requirements.txt           # Python dependencies
-├── .env.example              # Environment variables template
-├── .gitignore
-└── README.md
+└── .streamlit/
+    └── config.toml            # Streamlit configuration
 ```
 
-## 🚀 Installation & Setup
+**Total**: Hanya **2 file Python utama** - ultra-simple!
+
+## 🚀 Quick Start
 
 ### 1. Clone Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/anmas301/PID-Project.git
 cd PID-Project
 ```
 
-### 2. Create Virtual Environment
-
-```bash
-# Windows
-python -m venv venv
-venv\Scripts\activate
-
-# Linux/Mac
-python3 -m venv venv
-source venv/bin/activate
-```
-
-### 3. Install Dependencies
+### 2. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Environment Setup (Optional)
-
-Jika ingin menggunakan database:
-
-```bash
-cp .env.example .env
-# Edit .env dengan credentials database Anda
-```
-
-### 5. Database Setup (Optional)
-
-**PostgreSQL:**
-```bash
-# Install PostgreSQL
-# Create database
-createdb pid_project
-
-# Or using psql
-psql -U postgres
-CREATE DATABASE pid_project;
-```
-
-**MongoDB:**
-```bash
-# Install MongoDB
-# Start MongoDB service
-mongod
-```
+**That's it!** No database setup, no ML training, no complex configuration.
 
 ## 💻 Usage
 
-### Run Complete Pipeline
+### Step 1: Run ETL Pipeline
 
 ```bash
-# Run full pipeline (tanpa database)
-python src/main.py
-
-# Run full pipeline dengan database storage
-python src/main.py --use-database
-
-# Run tanpa model training
-python src/main.py --skip-model
-
-# Run dengan regression model
-python src/main.py --model-type regression
+python src/etl_pipeline.py
 ```
 
-### Run Specific Steps
+**Output:**
+- `output/risk_analysis_YYYYMMDD_HHMMSS.csv` - Data 34 kota dengan RR analysis
+- `output/risk_analysis_YYYYMMDD_HHMMSS.json` - Format API-ready
+- Console report dengan statistik dan ranking
+
+**Execution time:** ~30 detik untuk 34 kota
+
+### Step 2: Launch Dashboard
 
 ```bash
-# Hanya ingestion
-python src/main.py --step ingestion
-
-# Hingga transformation
-python src/main.py --step transformation
-
-# Hingga batch processing
-python src/main.py --step batch
-
-# Hanya model training
-python src/main.py --step model
+streamlit run src/dashboard_simple.py
 ```
 
-### Launch Dashboard
+Dashboard tersedia di: **http://localhost:8501**
+
+**Features:**
+- 📍 **Tab 1**: Peta geografis Risk Ratio Indonesia
+- 📊 **Tab 2**: Ranking dan analisis per kota
+- 🔬 **Tab 3**: Breakdown faktor polusi vs cuaca
+- 📈 **Tab 4**: Distribusi statistik risiko
+- 📋 **Tab 5**: Tabel metodologi lengkap
+
+### View Results
 
 ```bash
-streamlit run src/dashboard.py
-```
+# Lihat hasil ETL terbaru
+ls -lht output/risk_analysis_*.csv | head -1
 
-Dashboard akan tersedia di `http://localhost:8501`
+# Baca dengan pandas
+python -c "import pandas as pd; print(pd.read_csv('output/risk_analysis_*.csv').head())"
 
-### 🌐 Deploy Dashboard ke Publik
-
-Dashboard bisa diakses publik dengan beberapa cara:
-
-#### Option 1: Streamlit Cloud (Recommended - GRATIS)
-1. Buka https://share.streamlit.io/
-2. Login dengan GitHub
-3. Create new app dengan repository ini
-4. Deploy! Dashboard akan tersedia di URL publik
-
-**Dokumentasi lengkap**: Lihat [DEPLOYMENT.md](DEPLOYMENT.md)
-
-#### Option 2: Ngrok (Testing Cepat)
-```bash
-# Run script otomatis
-./quick-public-access.sh
-```
-
-Atau manual:
-```bash
-# Terminal 1: Run dashboard
-streamlit run src/dashboard.py
-
-# Terminal 2: Expose dengan ngrok
-ngrok http 8501
-``` atau `http://localhost:8502`
-
-### View Predictions & Analysis
-
-```bash
-# Lihat prediksi ISPA 7 hari
-cat output/future_ispa_predictions.csv
-
-# Lihat alert risiko tinggi (jika ada)
-cat output/risk_alerts.json 2>/dev/null || echo "No high-risk predictions"
-
-# Lihat laporan lengkap dengan ISPA analysis
-cat output/pipeline_report_*.json | python3 -m json.tool
+# Lihat summary JSON
+cat output/risk_analysis_*.json | python -m json.tool | head -50
 ```
 
 ## 📊 Dashboard Features
@@ -331,143 +272,110 @@ Batch processing melakukan:
 - **Trend analysis**: Linear regression untuk trend identification
 - **Statistical summary**: Comprehensive statistics per location
 
-## 🔐 API Keys Configuration
+## 🔐 Configuration
 
-API keys sudah tersimpan di `config/config.py`:
+API keys sudah dikonfigurasi di `config/config.py` - langsung bisa digunakan!
 
-```python
-OPENWEATHER_API_KEY = "a2a73644ed35384c9ac73bc606560ed5"
-WEATHERAPI_KEY = "e67f32eab28541b892b40743251609"
+**No environment variables needed** - semua sudah built-in untuk kemudahan penggunaan.
+
+## 📊 Output Structure
+
+```
+output/
+├── risk_analysis_20251123_080852.csv    # Latest: 34 kota
+├── risk_analysis_20251123_080852.json   # API-ready format
+├── risk_analysis_20251123_075509.csv    # Previous run
+└── ...
 ```
 
-Untuk production, disarankan menggunakan environment variables:
-
-```bash
-# .env file
-OPENWEATHER_API_KEY=your_key_here
-WEATHERAPI_KEY=your_key_here
-```
-
-## 📝 Logging
-
-Pipeline menggunakan logging comprehensif:
-- **INFO**: Progress updates
-- **WARNING**: Non-critical issues
-- **ERROR**: Errors dengan stacktrace
-
-Logs ditampilkan di console dan bisa disimpan ke file.
-
-## 🧪 Testing
-
-Test individual modules:
-
-```bash
-# Test ingestion
-python src/ingestion.py
-
-# Test transformation
-python src/transformation.py
-
-# Test storage (requires database)
-python src/storage.py
-
-# Test batch processing
-python src/batch_processing.py
-
-# Test model
-python src/model.py
-```
-
-## 📊 Expected Outputs
-
-1. **Processed Data** (`data/processed/`)
-   - `real_time_merged.csv`: Merged API data
-   - `*_clean.csv`: Cleaned CSV datasets
-   - `batch_*.csv`: Aggregated batch results
-
-2. **Models** (`models/`)
-   - `ispa_risk_model.joblib`: Trained ML model
-
-3. **Reports & Predictions** (`output/`)
-   - `pipeline_report_*.json`: Execution reports with ISPA analysis
-   - `feature_importance.csv`: Feature importance scores
-   - **🆕 `future_ispa_predictions.csv`**: Prediksi ISPA 7 hari ke depan
-   - **🆕 `risk_alerts.json`**: Alert untuk prediksi risiko tinggi (jika ada)
-
-4. **Dashboard**: Interactive web interface dengan 7 tabs (termasuk prediksi & korelasi)
+**Auto-cleanup**: Dashboard otomatis load file terbaru
 
 ## 🔧 Troubleshooting
 
-### API Connection Issues
-```bash
-# Test API connectivity
-curl "http://api.openweathermap.org/data/2.5/air_pollution?lat=-7.0051&lon=110.4381&appid=a2a73644ed35384c9ac73bc606560ed5"
-```
-
-### Database Connection Issues
-- Pastikan PostgreSQL/MongoDB running
-- Check credentials di `.env`
-- Verify firewall settings
+### API Timeout
+- Check internet connection
+- APIs gratis memiliki rate limit
+- Tunggu beberapa detik dan coba lagi
 
 ### Missing Dependencies
 ```bash
 pip install --upgrade -r requirements.txt
 ```
 
-### Memory Issues
-- Reduce data size dengan filtering
-- Use `--skip-model` untuk skip ML training
-- Increase system memory
+### Dashboard Not Loading Data
+- Pastikan ETL pipeline sudah dijalankan minimal 1x
+- Check folder `output/` memiliki file CSV
+- Refresh browser (F5)
 
 ## 🎓 Konsep Pembelajaran
 
 Project ini mencakup konsep-konsep penting dalam **Pemrosesan Data & Infrastruktur Data**:
 
-1. **Data Ingestion**: Fetching dari multiple sources (API + CSV)
-2. **Data Transformation**: ETL pipeline, cleaning, joining
-3. **Data Storage**: Relational (PostgreSQL) & NoSQL (MongoDB)
-4. **Batch Processing**: Agregasi dan analisis temporal
-5. **Machine Learning**: Classification & regression models
-6. **Visualization**: Interactive dashboards
-7. **Pipeline Orchestration**: End-to-end automation
-8. **Error Handling**: Robust exception handling
-9. **Logging**: Comprehensive activity tracking
-10. **Configuration Management**: Centralized config
+1. **ETL Pipeline**: Extract → Transform → Load architecture
+2. **Data Ingestion**: RESTful API consumption (OpenWeatherMap, WeatherAPI)
+3. **Data Transformation**: Lookup tables, categorical mapping, risk calculation
+4. **Data Loading**: Multiple formats (CSV, JSON)
+5. **Visualization**: Interactive dashboard dengan Streamlit & Plotly
+6. **Pipeline Automation**: Single-command execution
+7. **Error Handling**: Timeout protection, API fallback
+8. **Configuration Management**: Centralized config
+9. **Documentation**: Comprehensive README & methodology docs
+10. **Version Control**: Git workflow dengan meaningful commits
 
 ## 📚 References & Documentation
 
-- [OpenWeatherMap API Docs](https://openweathermap.org/api/air-pollution)
-- [WeatherAPI Docs](https://www.weatherapi.com/docs/)
+### API Documentation
+- [OpenWeatherMap Air Pollution API](https://openweathermap.org/api/air-pollution)
+- [WeatherAPI Documentation](https://www.weatherapi.com/docs/)
+
+### Research Papers (Risk Ratio Methodology)
+- **Odo et al. (2022)**: PM2.5 impact on respiratory diseases
+- **Monoson et al.**: PM10 and air quality health effects
+- **Davis et al. (2016)**: Temperature and humidity effects on respiratory transmission
+- **Lowen et al. (2007)**: Aerosol stability and environmental factors
+
+### Technical Documentation
 - [Streamlit Documentation](https://docs.streamlit.io/)
-- [Scikit-learn Documentation](https://scikit-learn.org/)
+- [Plotly Documentation](https://plotly.com/python/)
 - [Pandas Documentation](https://pandas.pydata.org/)
 
-## 🤝 Contributing
+### Additional Resources
+- [`README_ETL.md`](README_ETL.md) - Detailed ETL pipeline guide
+- [`TabelMetodologi.md`](TabelMetodologi.md) - Complete RR methodology
 
-Untuk kontribusi atau improvement:
-1. Fork repository
-2. Create feature branch
-3. Commit changes
-4. Push to branch
-5. Create Pull Request
+## 🎯 Project Highlights
 
-## 📄 License
+✅ **Ultra-simple**: 2 main Python files (ETL + Dashboard)  
+✅ **No ML complexity**: Evidence-based Risk Ratio methodology  
+✅ **No database required**: Direct CSV/JSON output  
+✅ **Real-time data**: Live API integration  
+✅ **Comprehensive coverage**: All 34 provinces of Indonesia  
+✅ **Interactive dashboard**: 5 tabs with rich visualizations  
+✅ **Well-documented**: Detailed README, ETL guide, methodology tables  
 
-Project ini dibuat untuk keperluan pembelajaran mata kuliah **Pemrosesan Data dan Infrastruktur Data**.
+## 📄 License & Usage
 
-## 👥 Authors
+Project ini dibuat untuk keperluan pembelajaran mata kuliah **Pemrosesan Data dan Infrastruktur Data** di Universitas.
 
-- **Your Name** - Project Developer
+**Free to use** untuk tujuan pembelajaran dan non-komersial.
+
+## 👥 Team
+
+- **anmas301** - Developer & Data Engineer
 - **Mata Kuliah**: Pemrosesan Data dan Infrastruktur Data
+- **Case**: SDG 3 - Good Health and Well-being
 
 ## 🙏 Acknowledgments
 
-- Data sources: OpenWeatherMap, WeatherAPI, BMKG, Kemenkes
-- Inspiration: [ProjekPID by shandy225-beep](https://github.com/shandy225-beep/ProjekPID)
-- SDG 3: Good Health and Well-being
+- **Data Sources**: OpenWeatherMap, WeatherAPI
+- **Research**: Odo et al., Monoson et al., Davis et al., Lowen et al.
+- **SDG Framework**: United Nations SDG 3 (Good Health and Well-being)
+- **Inspiration**: Open-source data engineering projects
 
 ---
 
-**Note**: Pastikan untuk mereview dan customize configuration sesuai kebutuhan spesifik Anda, terutama API keys dan database credentials.
+**Repository**: [github.com/anmas301/PID-Project](https://github.com/anmas301/PID-Project)
+
+**Made with ❤️ for learning ETL pipeline and data engineering fundamentals**
 
 **Happy Coding! 🚀**
