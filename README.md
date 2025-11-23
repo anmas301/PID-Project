@@ -132,20 +132,15 @@ PID-Project/
 
 ## 🚀 Quick Start
 
-### 1. Clone Repository
+### 1. Clone & Install
 
 ```bash
 git clone https://github.com/anmas301/PID-Project.git
 cd PID-Project
-```
-
-### 2. Install Dependencies
-
-```bash
 pip install -r requirements.txt
 ```
 
-**That's it!** No database setup, no ML training, no complex configuration.
+**That's it!** No database, no ML training, no API key setup needed.
 
 ## 💻 Usage
 
@@ -184,93 +179,67 @@ Dashboard tersedia di: **http://localhost:8501**
 ls -lht output/risk_analysis_*.csv | head -1
 
 # Baca dengan pandas
-python -c "import pandas as pd; print(pd.read_csv('output/risk_analysis_*.csv').head())"
+python -c "import pandas as pd; df = pd.read_csv('output/risk_analysis_20251123_080852.csv'); print(df[['city', 'rr_total', 'risk_category']].head(10))"
 
 # Lihat summary JSON
 cat output/risk_analysis_*.json | python -m json.tool | head -50
 ```
 
-## 📊 Dashboard Features
+**Example Output:**
+```
+Total Cities Analyzed: 34
 
-1. **Real-time Monitoring**
-   - Current AQI dan pollutant levels
-   - Risk category status
-   - Weather conditions
+Risk Distribution:
+  Tinggi        : 22 cities (64.7%)
+  Sangat Tinggi : 12 cities (35.3%)
 
-2. **Time Series Analysis**
-   - AQI trends over time
-   - Historical data visualization
-   - Risk category distribution
+Top 5 Highest Risk:
+  1. Denpasar   (Bali)                - RR: 1.3458
+  2. Jayapura   (Papua)               - RR: 1.3458
+  3. Palembang  (Sumatera Selatan)    - RR: 1.3197
+  4. Balikpapan (Kalimantan Timur)    - RR: 1.3197
+  5. Jambi      (Jambi)               - RR: 1.3066
 
-3. **Location Comparison**
-   - Compare AQI across cities
-   - Interactive maps
-   - Location-specific insights
-
-4. **Weather Correlation**
-   - Correlation analysis between weather and AQI
-   - Impact of temperature, humidity, wind
-
-5. **Pollutant Breakdown**
-   - Detailed pollutant levels (PM2.5, PM10, CO, NO2, O3, SO2)
-   - Bar charts dan comparisons
-
-6. **🆕 Kota dengan Polusi Tertinggi**
-   - Ranking kota berdasarkan AQI tertinggi
-   - Visualisasi perbandingan PM2.5 dan PM10
-   - Korelasi polutan dengan risiko ISPA
-   - Identifikasi daerah berisiko tinggi
-   - Rekomendasi kesehatan otomatis
-
-7. **🆕 Prediksi ISPA 7 Hari Ke Depan**
-   - Prediksi risiko ISPA untuk setiap kota
-   - Time series visualization dengan threshold
-   - Detail prediksi harian per lokasi
-   - Alert untuk prediksi risiko tinggi
-   - Risk score dan kategori (Low/Moderate/High/Very High)
-
-## 🤖 Machine Learning Models
-
-### Classification Model
-- **Task**: Predict risk category (good, moderate, unhealthy, etc.)
-- **Algorithm**: Random Forest Classifier
-- **Features**: AQI, pollutants, weather data, temporal features
-- **Output**: Risk category + probability
-
-### Regression Model
-- **Task**: Predict ISPA risk score (0-100)
-- **Algorithm**: Gradient Boosting Regressor
-- **Features**: Same as classification
-- **Output**: Continuous risk score
-
-### Model Training
-
-```python
-from src.model import ISPARiskPredictor
-import pandas as pd
-
-# Initialize predictor
-predictor = ISPARiskPredictor()
-
-# Load data
-df = pd.read_csv('data/processed/real_time_merged.csv')
-
-# Train model
-metrics = predictor.train_pipeline(df, target_type='classification')
-
-# Make predictions
-predictions = predictor.predict(df)
+Statistics:
+  Mean   : 1.2870
+  Median : 1.2812
+  Min    : 1.2438 (Bandar Lampung)
+  Max    : 1.3458 (Denpasar)
 ```
 
-## 📈 Batch Processing
+## 📊 Dashboard Features (5 Tabs)
 
-Batch processing melakukan:
-- **Daily aggregation**: Average, max, min per hari
-- **Weekly aggregation**: Trends per minggu
-- **Monthly aggregation**: Patterns per bulan
-- **Anomaly detection**: Deteksi nilai abnormal menggunakan z-score
-- **Trend analysis**: Linear regression untuk trend identification
-- **Statistical summary**: Comprehensive statistics per location
+### Tab 1: 📍 Peta Risk Ratio
+- Visualisasi geografis seluruh Indonesia
+- Scatter map dengan color coding berdasarkan Risk Ratio
+- Hover information: kota, provinsi, RR, kategori risiko
+- Identifikasi wilayah berisiko tinggi secara visual
+
+### Tab 2: 📊 Analisis per Kota
+- Ranking kota dari RR tertinggi ke terendah
+- Bar chart Risk Ratio dengan threshold kategori
+- Tabel detail dengan semua parameter (polusi + cuaca)
+- Styling berdasarkan kategori risiko
+
+### Tab 3: 🔬 Breakdown Analisis
+- Breakdown faktor polusi vs cuaca per kota
+- Bar chart contribution analysis
+- Identifikasi faktor dominan (polusi atau cuaca)
+- Perbandingan antar kota
+
+### Tab 4: 📈 Distribusi Risiko
+- Pie chart distribusi kategori risiko
+- Histogram distribusi Risk Ratio
+- Box plot untuk statistical analysis
+- Summary statistics (mean, median, std, min, max)
+
+### Tab 5: 📋 Metodologi
+- Tabel Risk Ratio lengkap (polusi & cuaca)
+- Formula multiplikatif dengan LaTeX
+- Referensi penelitian ilmiah
+- Penjelasan kategori risiko
+
+
 
 ## 🔐 Configuration
 
@@ -282,13 +251,57 @@ API keys sudah dikonfigurasi di `config/config.py` - langsung bisa digunakan!
 
 ```
 output/
-├── risk_analysis_20251123_080852.csv    # Latest: 34 kota
+├── risk_analysis_20251123_080852.csv    # Latest: 34 kota × 29 kolom
 ├── risk_analysis_20251123_080852.json   # API-ready format
-├── risk_analysis_20251123_075509.csv    # Previous run
-└── ...
+└── (older runs...)
 ```
 
-**Auto-cleanup**: Dashboard otomatis load file terbaru
+**CSV Columns (29 total)**:
+- Identitas: city, province, latitude, longitude
+- Polusi: pm2_5, pm10, no2, so2, o3, aqi
+- Cuaca: temp_c, humidity, wind_kph
+- Risk Ratios: rr_pm2_5, rr_pm10, rr_no2, rr_so2, rr_o3, rr_temp, rr_humidity, rr_wind
+- Hasil: rr_total, risk_category
+- Metadata: timestamp
+
+**Auto-load**: Dashboard otomatis pilih file terbaru
+
+### Example Results
+
+```bash
+# Lihat hasil ETL terbaru
+ls -lht output/risk_analysis_*.csv | head -1
+
+# Baca dengan pandas
+python -c "import pandas as pd; df = pd.read_csv('output/risk_analysis_20251123_080852.csv'); print(df[['city', 'rr_total', 'risk_category']].head(10))"
+
+# Lihat summary JSON
+cat output/risk_analysis_*.json | python -m json.tool | head -50
+```
+
+**Example Pipeline Output:**
+```
+✅ ETL Pipeline Completed Successfully!
+
+Total Cities Analyzed: 34
+
+Risk Distribution:
+  Tinggi        : 22 cities (64.7%)
+  Sangat Tinggi : 12 cities (35.3%)
+
+Top 5 Highest Risk Cities:
+  1. Denpasar   (Bali)                - RR: 1.3458 ⚠️
+  2. Jayapura   (Papua)               - RR: 1.3458 ⚠️
+  3. Palembang  (Sumatera Selatan)    - RR: 1.3197 ⚠️
+  4. Balikpapan (Kalimantan Timur)    - RR: 1.3197 ⚠️
+  5. Jambi      (Jambi)               - RR: 1.3066 ⚠️
+
+Statistics:
+  Mean   : 1.2870
+  Median : 1.2812
+  Min    : 1.2438 (Bandar Lampung - Lowest Risk)
+  Max    : 1.3458 (Denpasar - Highest Risk)
+```
 
 ## 🔧 Troubleshooting
 
@@ -361,9 +374,16 @@ Project ini dibuat untuk keperluan pembelajaran dan portfolio.
 
 ## 👥 Author
 
-- **anmas301** - Developer & Data Engineer
-- **Focus**: Data Engineering & ETL Pipeline Development
-- **Case**: SDG 3 - Good Health and Well-being
+**Focus**: Data Engineering & ETL Pipeline Development
+
+**Skills Demonstrated**:
+- ✅ ETL Pipeline Design & Implementation
+- ✅ RESTful API Integration & Data Ingestion
+- ✅ Data Transformation with Evidence-based Methodology
+- ✅ Interactive Dashboard Development (Streamlit)
+- ✅ Data Visualization (Plotly, Geographic Maps)
+- ✅ Clean Code Architecture & Documentation
+- ✅ Git Workflow & Version Control
 
 ## 🙏 Acknowledgments
 
@@ -375,7 +395,3 @@ Project ini dibuat untuk keperluan pembelajaran dan portfolio.
 ---
 
 **Repository**: [github.com/anmas301/PID-Project](https://github.com/anmas301/PID-Project)
-
-**Made with ❤️ for learning ETL pipeline and data engineering fundamentals**
-
-**Happy Coding! 🚀**
