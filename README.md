@@ -207,7 +207,34 @@ python src/main.py --step model
 streamlit run src/dashboard.py
 ```
 
-Dashboard akan tersedia di `http://localhost:8501` atau `http://localhost:8502`
+Dashboard akan tersedia di `http://localhost:8501`
+
+### 🌐 Deploy Dashboard ke Publik
+
+Dashboard bisa diakses publik dengan beberapa cara:
+
+#### Option 1: Streamlit Cloud (Recommended - GRATIS)
+1. Buka https://share.streamlit.io/
+2. Login dengan GitHub
+3. Create new app dengan repository ini
+4. Deploy! Dashboard akan tersedia di URL publik
+
+**Dokumentasi lengkap**: Lihat [DEPLOYMENT.md](DEPLOYMENT.md)
+
+#### Option 2: Ngrok (Testing Cepat)
+```bash
+# Run script otomatis
+./quick-public-access.sh
+```
+
+Atau manual:
+```bash
+# Terminal 1: Run dashboard
+streamlit run src/dashboard.py
+
+# Terminal 2: Expose dengan ngrok
+ngrok http 8501
+``` atau `http://localhost:8502`
 
 ### View Predictions & Analysis
 
