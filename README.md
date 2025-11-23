@@ -307,9 +307,9 @@ pip install --upgrade -r requirements.txt
 - Check folder `output/` memiliki file CSV
 - Refresh browser (F5)
 
-## 🎓 Konsep Pembelajaran
+## 🎓 Technical Concepts
 
-Project ini mencakup konsep-konsep penting dalam **Pemrosesan Data & Infrastruktur Data**:
+Project ini mencakup konsep-konsep penting dalam **Data Engineering & Pipeline Development**:
 
 1. **ETL Pipeline**: Extract → Transform → Load architecture
 2. **Data Ingestion**: RESTful API consumption (OpenWeatherMap, WeatherAPI)
@@ -355,14 +355,14 @@ Project ini mencakup konsep-konsep penting dalam **Pemrosesan Data & Infrastrukt
 
 ## 📄 License & Usage
 
-Project ini dibuat untuk keperluan pembelajaran mata kuliah **Pemrosesan Data dan Infrastruktur Data** di Universitas.
+Project ini dibuat untuk keperluan pembelajaran dan portfolio.
 
 **Free to use** untuk tujuan pembelajaran dan non-komersial.
 
-## 👥 Team
+## 👥 Author
 
 - **anmas301** - Developer & Data Engineer
-- **Mata Kuliah**: Pemrosesan Data dan Infrastruktur Data
+- **Focus**: Data Engineering & ETL Pipeline Development
 - **Case**: SDG 3 - Good Health and Well-being
 
 ## 🙏 Acknowledgments
