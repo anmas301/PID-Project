@@ -157,6 +157,20 @@ python src/etl_pipeline.py
 
 **Execution time:** ~30 detik untuk 34 kota
 
+### Step 1b: Run Scheduler (Optional - Auto Refresh Every Hour)
+
+```bash
+python src/scheduler.py
+```
+
+**Features:**
+- ⏰ Automatically runs ETL every 1 hour
+- 📊 Fresh data for dashboard
+- 🔄 Background process
+- ✅ Error handling & logging
+
+See [`SCHEDULER.md`](SCHEDULER.md) for detailed documentation.
+
 ### Step 2: Launch Dashboard
 
 ```bash
