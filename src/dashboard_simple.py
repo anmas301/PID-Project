@@ -229,7 +229,7 @@ if df is not None and len(df) > 0:
         
         # Pilih kolom yang ada
         base_cols = ['city', 'province', 'rr_total', 'risk_category']
-        optional_cols = ['pm2_5', 'pm10', 'no2', 'temperature', 'humidity']
+        optional_cols = ['pm2_5', 'pm10', 'no2', 'temperature', 'humidity', 'wind_speed']
         display_cols = base_cols + [col for col in optional_cols if col in df_sorted.columns]
         
         # Format dictionary hanya untuk kolom yang ada
@@ -244,6 +244,8 @@ if df is not None and len(df) > 0:
             format_dict['temperature'] = '{:.1f}°C'
         if 'humidity' in df_sorted.columns:
             format_dict['humidity'] = '{:.0f}%'
+        if 'wind_speed' in df_sorted.columns:
+            format_dict['wind_speed'] = '{:.2f} m/s'
         
         st.dataframe(
             df_sorted[display_cols].style.format(format_dict).background_gradient(subset=['rr_total'], cmap='RdYlGn_r'),
