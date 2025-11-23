@@ -36,11 +36,17 @@ def run_etl_pipeline():
         from src.etl_pipeline import SimpleETL
         
         etl = SimpleETL()
-        etl.extract()
-        etl.transform()
-        output_file = etl.load()
+        df = etl.run(output_format='csv')  # Run full ETL pipeline
         
-        return output_file, None
+        # Dapatkan file CSV terbaru
+        import glob
+        csv_files = glob.glob('output/risk_analysis_*.csv')
+        if csv_files:
+            latest_file = max(csv_files, key=lambda x: x.split('_')[-1])
+            return latest_file, None
+        else:
+            return None, "No output file found"
+            
     except Exception as e:
         return None, str(e)
 
