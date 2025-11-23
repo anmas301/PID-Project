@@ -1,32 +1,32 @@
 # Data Processing
-pandas==2.1.4
-numpy==1.26.2
+pandas>=2.0.0
+numpy>=1.24.0
 
 # API & Web Requests
-requests==2.31.0
+requests>=2.31.0
 
-# Database
-psycopg2-binary==2.9.9
-pymongo==4.6.1
-sqlalchemy==2.0.23
+# Database (optional - uncomment if needed)
+# psycopg2-binary>=2.9.0
+# pymongo>=4.6.0
+# sqlalchemy>=2.0.0
 
 # Machine Learning
-scikit-learn==1.3.2
-xgboost==2.0.3
+scikit-learn>=1.3.0
+xgboost>=2.0.0
 
 # Visualization
-matplotlib==3.8.2
-seaborn==0.13.0
-plotly==5.18.0
-streamlit==1.29.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+plotly>=5.18.0
+streamlit>=1.29.0
 
 # Utilities
-python-dotenv==1.0.0
-schedule==1.2.0
-tqdm==4.66.1
+python-dotenv>=1.0.0
+schedule>=1.2.0
+tqdm>=4.66.0
 
 # Logging
-loguru==0.7.2
+loguru>=0.7.0
 
 # Data Validation
-pydantic==2.5.3
+pydantic>=2.5.0
