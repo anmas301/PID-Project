@@ -33,6 +33,13 @@ st.markdown("---")
 def run_etl_pipeline():
     """Jalankan ETL pipeline dan return path ke file hasil"""
     try:
+        import sys
+        import os
+        # Pastikan path correct
+        script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if script_dir not in sys.path:
+            sys.path.insert(0, script_dir)
+        
         from src.etl_pipeline import SimpleETL
         
         etl = SimpleETL()
@@ -40,15 +47,17 @@ def run_etl_pipeline():
         
         # Dapatkan file CSV terbaru
         import glob
-        csv_files = glob.glob('output/risk_analysis_*.csv')
+        output_dir = os.path.join(script_dir, 'output')
+        csv_files = glob.glob(os.path.join(output_dir, 'risk_analysis_*.csv'))
         if csv_files:
-            latest_file = max(csv_files, key=lambda x: x.split('_')[-1])
+            latest_file = max(csv_files, key=lambda x: os.path.basename(x))
             return latest_file, None
         else:
             return None, "No output file found"
             
     except Exception as e:
-        return None, str(e)
+        import traceback
+        return None, f"{str(e)}\n{traceback.format_exc()}"
 
 # Function untuk cek apakah scheduler sedang berjalan
 def check_scheduler_running():
